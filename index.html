@@ -1534,7 +1534,7 @@
       <div class="auth-display">JOHNNY.</div>
       <p class="auth-kicker">
         <strong>Calm. Secure. Confident.</strong><br>
-        The Capsule sales plate — every deal, every MEDDPICC element, one surface. Enter your Capsule email and the shared access code.
+        The Capsule sales plate — every deal, every MEDDPICC element, one surface. Enter your Capsule email and the code.
       </p>
 
       <form id="authForm" class="auth-form" autocomplete="on" novalidate>
@@ -1555,13 +1555,13 @@
           type="password"
           required
           autocomplete="current-password"
-          placeholder="Access code"
+          placeholder="Code"
           spellcheck="false"
           autocapitalize="off"
-          aria-label="Shared access code"
+          aria-label="Code"
         />
         <button id="authSubmit" class="btn-primary" type="submit">
-          <span>Sign in</span>
+          <span>Login</span>
         </button>
       </form>
 
@@ -1850,16 +1850,16 @@
         return;
       }
       if (!password) {
-        showAuthError('Enter the access code.');
+        showAuthError('Enter the code.');
         return;
       }
       $submit.disabled = true;
-      $submit.querySelector('span').textContent = 'Signing in…';
+      $submit.querySelector('span').textContent = 'Logging in…';
       const hash = await sha256Hex(password);
       $submit.disabled = false;
-      $submit.querySelector('span').textContent = 'Sign in';
+      $submit.querySelector('span').textContent = 'Login';
       if (hash !== PASSWORD_HASH) {
-        showAuthError('Incorrect access code.');
+        showAuthError('Incorrect code.');
         $passwordInput.value = '';
         $passwordInput.focus();
         return;
@@ -1879,7 +1879,7 @@
       $app.classList.add('hidden');
       $passwordInput.value = '';
       $submit.disabled = false;
-      $submit.querySelector('span').textContent = 'Sign in';
+      $submit.querySelector('span').textContent = 'Login';
       setTimeout(() => $emailInput.focus(), 40);
     }
     function showApp(user) {
