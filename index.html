@@ -1534,7 +1534,7 @@
       <div class="auth-display">JOHNNY.</div>
       <p class="auth-kicker">
         <strong>Calm. Secure. Confident.</strong><br>
-        The Capsule sales plate — every deal, every MEDDPICC element, one surface. Sign in with the magic link we'll send to your Capsule email.
+        The Capsule sales plate — every deal, every MEDDPICC element, one surface. Sign in with the one-time code we'll send to your Capsule email.
       </p>
 
       <form id="authForm" class="auth-form" autocomplete="on" novalidate>
@@ -1550,9 +1550,34 @@
           aria-label="Capsule email address"
         />
         <button id="authSubmit" class="btn-primary" type="submit">
-          <span>Send link</span>
+          <span>Send code</span>
         </button>
       </form>
+
+      <form id="otpForm" class="auth-form hidden" autocomplete="one-time-code" novalidate>
+        <input
+          id="otpInput"
+          class="email-input"
+          type="text"
+          inputmode="numeric"
+          pattern="[0-9]*"
+          maxlength="6"
+          required
+          autocomplete="one-time-code"
+          placeholder="6-digit code"
+          spellcheck="false"
+          autocapitalize="off"
+          aria-label="One-time code from email"
+        />
+        <button id="otpSubmit" class="btn-primary" type="submit">
+          <span>Verify code</span>
+        </button>
+      </form>
+
+      <div id="otpActions" class="auth-form hidden" style="justify-content:center;gap:12px;">
+        <button id="otpResend" class="statusbar-signout" type="button">Resend code</button>
+        <button id="otpBack"   class="statusbar-signout" type="button">Use a different email</button>
+      </div>
 
       <div id="authError"   class="auth-msg err hidden" role="alert"></div>
       <div id="authSuccess" class="auth-msg ok  hidden" role="status"></div>
@@ -1777,20 +1802,63 @@
     })();
 
     /* ── AUTH ────────────────────────────────────────────────────── */
-    const $auth = document.getElementById('authScreen');
-    const $app = document.getElementById('app');
-    const $err = document.getElementById('authError');
-    const $ok = document.getElementById('authSuccess');
-    const $submit = document.getElementById('authSubmit');
+    const $auth       = document.getElementById('authScreen');
+    const $app        = document.getElementById('app');
+    const $err        = document.getElementById('authError');
+    const $ok         = document.getElementById('authSuccess');
+    const $emailForm  = document.getElementById('authForm');
+    const $otpForm    = document.getElementById('otpForm');
+    const $otpActions = document.getElementById('otpActions');
+    const $submit     = document.getElementById('authSubmit');
+    const $otpSubmit  = document.getElementById('otpSubmit');
+    const $emailInput = document.getElementById('emailInput');
+    const $otpInput   = document.getElementById('otpInput');
 
-    document.getElementById('authForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
+    // Pending email (between "send code" and "verify code")
+    let pendingEmail = null;
+
+    function showEmailStage() {
+      pendingEmail = null;
+      $emailForm.classList.remove('hidden');
+      $otpForm.classList.add('hidden');
+      $otpActions.classList.add('hidden');
+      $otpInput.value = '';
+      $submit.disabled = false;
+      $submit.querySelector('span').textContent = 'Send code';
+    }
+
+    function showCodeStage(email) {
+      pendingEmail = email;
+      $emailForm.classList.add('hidden');
+      $otpForm.classList.remove('hidden');
+      $otpActions.classList.remove('hidden');
+      $otpInput.value = '';
+      setTimeout(() => $otpInput.focus(), 40);
+      $otpSubmit.disabled = false;
+      $otpSubmit.querySelector('span').textContent = 'Verify code';
+    }
+
+    async function sendCode(email) {
       hideAuthMsgs();
       if (!supabase) {
         showAuthError('Backend not configured. Check deploy build replaced Supabase placeholders.');
-        return;
+        return false;
       }
-      const raw = document.getElementById('emailInput').value.trim();
+      // NOTE: omit emailRedirectTo so Supabase sends a 6-digit code instead of a magic link.
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: { shouldCreateUser: true }
+      });
+      if (error) { showAuthError(error.message); return false; }
+      showAuthSuccess('<b>Check your inbox</b> at ' + email + '. Enter the 6-digit code we just sent — it expires in about an hour.');
+      return true;
+    }
+
+    // Step 1 — request a code
+    $emailForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAuthMsgs();
+      const raw = $emailInput.value.trim();
       const email = raw.toLowerCase();
       if (!email || !email.includes('@')) {
         showAuthError('Enter a valid email address.');
@@ -1802,17 +1870,56 @@
       }
       $submit.disabled = true;
       $submit.querySelector('span').textContent = 'Sending…';
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: window.location.href.split('#')[0].split('?')[0],
-          shouldCreateUser: true
-        }
-      });
+      const ok = await sendCode(email);
       $submit.disabled = false;
-      $submit.querySelector('span').textContent = 'Send link';
-      if (error) { showAuthError(error.message); return; }
-      showAuthSuccess('<b>Check your inbox</b> at ' + email + '. Click the magic link to sign in — you can close this tab once you do.');
+      $submit.querySelector('span').textContent = 'Send code';
+      if (ok) showCodeStage(email);
+    });
+
+    // Step 2 — verify the code
+    $otpForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideAuthMsgs();
+      if (!supabase || !pendingEmail) { showEmailStage(); return; }
+      const code = $otpInput.value.replace(/\D/g, '').trim();
+      if (code.length < 6) {
+        showAuthError('Enter the 6-digit code from your email.');
+        return;
+      }
+      $otpSubmit.disabled = true;
+      $otpSubmit.querySelector('span').textContent = 'Verifying…';
+      const { data, error } = await supabase.auth.verifyOtp({
+        email: pendingEmail,
+        token: code,
+        type: 'email'
+      });
+      $otpSubmit.disabled = false;
+      $otpSubmit.querySelector('span').textContent = 'Verify code';
+      if (error) {
+        showAuthError(error.message || 'Invalid or expired code. Try again or resend.');
+        return;
+      }
+      // onAuthStateChange → gate() will flip to the app. Nothing else to do here.
+    });
+
+    // Resend the code for the same email
+    document.getElementById('otpResend').addEventListener('click', async () => {
+      if (!pendingEmail) { showEmailStage(); return; }
+      hideAuthMsgs();
+      await sendCode(pendingEmail);
+    });
+
+    // Go back and enter a different email
+    document.getElementById('otpBack').addEventListener('click', () => {
+      hideAuthMsgs();
+      showEmailStage();
+      setTimeout(() => $emailInput.focus(), 40);
+    });
+
+    // Numeric-only filter for the code input
+    $otpInput.addEventListener('input', (e) => {
+      const cleaned = e.target.value.replace(/\D/g, '').slice(0, 6);
+      if (e.target.value !== cleaned) e.target.value = cleaned;
     });
 
     document.getElementById('logoutBtn').addEventListener('click', async () => {
@@ -1823,6 +1930,7 @@
     function showAuth() {
       $auth.classList.remove('hidden');
       $app.classList.add('hidden');
+      showEmailStage();
     }
     function showApp(user) {
       $auth.classList.add('hidden');
