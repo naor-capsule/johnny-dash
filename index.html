@@ -1290,6 +1290,160 @@
     }
     .advisory b { color: var(--ink); font-weight: 700; }
 
+    /* Leadership trio — Champion · EB · CISO */
+    .leadership-trio {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--s-3);
+      margin-bottom: var(--s-7);
+    }
+    .trio-card {
+      border: 1px solid var(--rule);
+      border-radius: 3px;
+      padding: var(--s-4);
+      min-width: 0;
+      background: var(--ocean-2);
+    }
+    .trio-card.unknown { border-style: dashed; background: transparent; }
+    .trio-role {
+      font-size: var(--t-micro);
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--ink-mute);
+      margin-bottom: var(--s-2);
+    }
+    .trio-name {
+      font-size: var(--t-body);
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: -0.005em;
+      line-height: 1.25;
+      word-break: break-word;
+    }
+    .trio-card.unknown .trio-name { color: var(--ink-faint); font-weight: 300; }
+    .trio-title {
+      margin-top: 2px;
+      font-size: var(--t-caption);
+      font-weight: 300;
+      color: var(--ink-dim);
+      line-height: 1.35;
+      word-break: break-word;
+    }
+
+    /* Narrative block */
+    .narrative {
+      margin-bottom: var(--s-7);
+      font-size: var(--t-body);
+      line-height: 1.65;
+      font-weight: 300;
+      color: var(--ink-dim);
+      white-space: pre-wrap;
+    }
+    .narrative b, .narrative strong { color: var(--ink); font-weight: 700; }
+
+    /* Key people list */
+    .key-people-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin-bottom: var(--s-7);
+    }
+    .kp-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: var(--s-4);
+      padding: var(--s-3) 0;
+      border-top: 1px solid var(--rule);
+    }
+    .kp-row:last-child { border-bottom: 1px solid var(--rule); }
+    .kp-main { min-width: 0; }
+    .kp-name {
+      font-size: var(--t-body);
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: -0.005em;
+    }
+    .kp-title {
+      font-size: var(--t-caption);
+      font-weight: 300;
+      color: var(--ink-dim);
+      margin-top: 2px;
+      line-height: 1.4;
+    }
+    .kp-role {
+      display: inline-flex;
+      align-items: center;
+      height: 22px;
+      padding: 0 var(--s-3);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      border: 1px solid currentColor;
+      border-radius: 2px;
+      align-self: center;
+      white-space: nowrap;
+    }
+    .kp-role.champion       { color: var(--sig-g); background: var(--sig-g-bg); }
+    .kp-role.economic_buyer { color: var(--mint); }
+    .kp-role.ciso           { color: var(--sig-a); background: var(--sig-a-bg); }
+    .kp-role.coach          { color: var(--ink-dim); }
+    .kp-role.evaluator      { color: var(--ink-mute); }
+    .kp-role.influencer     { color: var(--ink-mute); }
+    .kp-role.blocker        { color: var(--sig-r); background: var(--sig-r-bg); }
+    .kp-role.user, .kp-role.other { color: var(--ink-faint); }
+
+    /* Signal timeline */
+    .signal-timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin-bottom: var(--s-7);
+    }
+    .sig-row {
+      display: grid;
+      grid-template-columns: 96px auto 1fr;
+      gap: var(--s-3);
+      padding: var(--s-3) 0;
+      border-top: 1px solid var(--rule);
+      align-items: baseline;
+    }
+    .sig-row:last-child { border-bottom: 1px solid var(--rule); }
+    .sig-date {
+      font-size: var(--t-caption);
+      font-weight: 700;
+      color: var(--ink-mute);
+      font-feature-settings: "tnum" 1;
+      letter-spacing: 0.02em;
+    }
+    .sig-source {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--mint);
+    }
+    .sig-text {
+      font-size: var(--t-body);
+      font-weight: 300;
+      color: var(--ink-dim);
+      line-height: 1.55;
+      min-width: 0;
+    }
+
+    /* Empty-section placeholder */
+    .drawer-empty {
+      padding: var(--s-4) 0;
+      font-size: var(--t-caption);
+      color: var(--ink-faint);
+      font-weight: 300;
+      font-style: italic;
+      border-top: 1px solid var(--rule);
+      border-bottom: 1px solid var(--rule);
+      margin-bottom: var(--s-7);
+    }
+
     /* ─────────────────────────────────────────────────────────────────
      * LOADING & EMPTY (skeleton, not spinner)
      * ─────────────────────────────────────────────────────────────── */
@@ -2309,6 +2463,78 @@
               ? "<b>Still qualifying.</b> Work the McMahon logic chain top-down — pain → metrics → champion. Don't jump ahead."
               : "<b>Remove from forecast.</b> Per McMahon: if removed, you need 4× this value in new pipeline to offset.";
 
+      /* Leadership trio — Champion, Economic Buyer, CISO */
+      const trioCard = (role, name, title) => {
+        if (!name) {
+          return '<div class="trio-card unknown">' +
+            '<div class="trio-role">' + role + '</div>' +
+            '<div class="trio-name">Not identified</div>' +
+          '</div>';
+        }
+        return '<div class="trio-card">' +
+          '<div class="trio-role">' + role + '</div>' +
+          '<div class="trio-name">' + escapeHtml(name) + '</div>' +
+          (title ? '<div class="trio-title">' + escapeHtml(title) + '</div>' : '') +
+        '</div>';
+      };
+      const leadership =
+        '<div class="leadership-trio">' +
+          trioCard('Champion',       deal.champion_name, deal.champion_title) +
+          trioCard('Economic Buyer', deal.eb_name,       deal.eb_title) +
+          trioCard('CISO',           deal.ciso_name,     deal.ciso_title) +
+        '</div>';
+
+      /* Narrative — signal-derived story */
+      const narrativeHtml = deal.narrative
+        ? '<div class="narrative">' + escapeHtml(deal.narrative) + '</div>'
+        : '<div class="drawer-empty">No narrative captured yet — signals will build this over time.</div>';
+
+      /* Key people */
+      const roleLabels = {
+        champion: 'Champion',
+        economic_buyer: 'Econ. Buyer',
+        ciso: 'CISO',
+        coach: 'Coach',
+        evaluator: 'Evaluator',
+        influencer: 'Influencer',
+        blocker: 'Blocker',
+        user: 'User',
+        other: 'Other'
+      };
+      const kp = Array.isArray(deal.key_people) ? deal.key_people : [];
+      const keyPeopleHtml = kp.length
+        ? '<div class="key-people-list">' +
+            kp.map(p => {
+              const role = (p.role_in_deal || p.role || 'other').toLowerCase().replace(/\s+/g, '_');
+              const label = roleLabels[role] || (p.role_in_deal || p.role || 'Other');
+              return '<div class="kp-row">' +
+                '<div class="kp-main">' +
+                  '<div class="kp-name">' + escapeHtml(p.name || 'Unknown') + '</div>' +
+                  (p.title ? '<div class="kp-title">' + escapeHtml(p.title) + '</div>' : '') +
+                '</div>' +
+                '<span class="kp-role ' + role + '">' + escapeHtml(label) + '</span>' +
+              '</div>';
+            }).join('') +
+          '</div>'
+        : '<div class="drawer-empty">No people mapped from signals yet.</div>';
+
+      /* Signal timeline */
+      const tl = Array.isArray(deal.signal_timeline) ? deal.signal_timeline : [];
+      const timelineHtml = tl.length
+        ? '<div class="signal-timeline">' +
+            tl.map(ev => {
+              const date = ev.date ? escapeHtml(ev.date) : '—';
+              const src  = ev.source ? escapeHtml(String(ev.source).toUpperCase()) : '';
+              const text = ev.summary || ev.text || ev.event || '';
+              return '<div class="sig-row">' +
+                '<span class="sig-date">' + date + '</span>' +
+                '<span class="sig-source">' + src + '</span>' +
+                '<span class="sig-text">' + escapeHtml(text) + '</span>' +
+              '</div>';
+            }).join('') +
+          '</div>'
+        : '<div class="drawer-empty">No timeline events from signals yet.</div>';
+
       $drawer.innerHTML =
         '<div class="drawer-top">' +
           '<span>Deal Brief</span><b>·</b><span>' + escapeHtml(deal.company_name) + '</span>' +
@@ -2344,10 +2570,18 @@
           '</div>' +
         '</div>' +
         '<div class="drawer-body">' +
+          '<div class="drawer-section-title">Leadership</div>' +
+          leadership +
+          '<div class="drawer-section-title">Narrative</div>' +
+          narrativeHtml +
           '<div class="drawer-section-title">MEDDPICC Snapshot</div>' +
           '<div class="drawer-meddpicc">' + meddpiccRow + '</div>' +
           '<div class="drawer-section-title">Top ' + (actions.length || 'Moves') + ' ' + (actions.length ? 'Moves' : '') + '</div>' +
           '<div class="drawer-moves">' + actionCards + '</div>' +
+          '<div class="drawer-section-title">Key People</div>' +
+          keyPeopleHtml +
+          '<div class="drawer-section-title">Signal Timeline</div>' +
+          timelineHtml +
           '<div class="advisory">' + advisory + '</div>' +
         '</div>';
 
